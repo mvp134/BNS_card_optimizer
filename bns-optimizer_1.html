@@ -17,19 +17,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bottom:1px solid var(--gold);padding:14px 24px;display:flex;align-items:center;gap:16px}
 .logo{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--gold2);letter-spacing:2px;text-shadow:0 0 20px rgba(200,153,58,.4)}
 .logo span{color:var(--text2);font-size:13px;font-weight:500;margin-left:8px;letter-spacing:1px}
-.layout-wrap {
-  /* display: flex; 와 justify-content: center; 제거 */
-  height: calc(100vh - 53px);
-  overflow: auto; /* hidden을 auto로 변경하여 스크롤 허용 */
-}
 
-.layout {
-  display: grid;
-  grid-template-columns: 340px 260px 400px;
-  height: 100%;
-  width: 1000px;
-  margin: 0 auto; /* flex 대신 margin으로 안전하게 가운데 정렬 */
-}
+/* 가운데 정렬 및 스크롤 문제 수정 */
+.layout-wrap{height:calc(100vh - 53px);overflow:auto;}
+.layout{display:grid;grid-template-columns:340px 260px 400px;height:100%;width:1000px;margin:0 auto;}
+
 .panel{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .panel-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:6px}
 .panel-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase}
@@ -118,19 +110,43 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
 .wt.t2.on{background:rgba(76,175,120,.15);border-color:#4caf78;color:#4caf78}
 .wt.t3.on{background:rgba(200,153,58,.15);border-color:var(--gold);color:var(--gold2)}
 .wt.t4.on{background:rgba(224,68,68,.18);border-color:#e05050;color:#ff8070}
+
+/* PC에서는 모바일 탭 숨김 */
+.mobile-tabs { display: none; }
+
+/* 모바일(1024px 이하) 탭 UI 전용 CSS */
 @media (max-width: 1024px) {
-  .layout-wrap {
-    height: auto;
-  }
-  .layout {
-    width: 100%;
-    grid-template-columns: 1fr; /* 1단 세로 배치 */
-    height: auto;
-  }
-  .panel {
-    border-right: none;
+  .mobile-tabs {
+    display: flex;
+    background: var(--bg2);
     border-bottom: 1px solid var(--border);
-    min-height: 500px; /* 각 패널의 최소 높이 보장 */
+  }
+  .m-tab {
+    flex: 1; padding: 12px 0; text-align: center; color: var(--text2);
+    background: none; border: none; font-size: 13px; font-weight: 500;
+    border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+  }
+  .m-tab.active {
+    color: var(--gold2); border-bottom-color: var(--gold2); background: rgba(200,153,58,.05); font-weight: 700;
+  }
+
+  /* 레이아웃 변경 (그리드 해제) */
+  .layout-wrap { height: auto; overflow: auto; }
+  .layout {
+    display: block; /* 1000px 그리드 고정 해제 */
+    width: 100%;
+    height: auto;
+    margin: 0;
+  }
+
+  /* 패널 숨김 및 표시 로직 */
+  .panel {
+    display: none; /* 모바일에서는 기본적으로 다 숨김 */
+    border-right: none;
+    min-height: calc(100vh - 100px); /* 탭 메뉴 높이 제외한 여백 확보 */
+  }
+  .panel.m-active {
+    display: flex; /* m-active 클래스가 붙은 패널만 보여줌 */
   }
 }
 </style>
@@ -140,10 +156,16 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
   <div class="logo">도화첩 최적화 <span>BnS NEO</span></div>
   <div style="background:rgba(155,126,200,.15);border:1px solid rgba(155,126,200,.4);border-radius:4px;padding:3px 10px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1.5px;">α ALPHA</div>
 </header>
+
+<div class="mobile-tabs">
+  <button class="m-tab active" onclick="switchMobileTab(0)">① 인연 선택</button>
+  <button class="m-tab" onclick="switchMobileTab(1)">② 가중치 설정</button>
+  <button class="m-tab" onclick="switchMobileTab(2)">③ 결과 확인</button>
+</div>
+
 <div class="layout-wrap"><div class="layout">
 
-<!-- LEFT -->
-<div class="panel">
+<div class="panel m-active">
   <div class="panel-header">
     <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
       <span class="panel-title" style="flex-shrink:0">완성 인연 선택</span>
@@ -174,7 +196,6 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
   </div>
 </div>
 
-<!-- MIDDLE -->
 <div class="panel">
   <div class="panel-header"><span class="panel-title">가중치 설정</span></div>
   <div class="panel-body">
@@ -217,7 +238,6 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
   </div>
 </div>
 
-<!-- RIGHT -->
 <div class="panel result-panel">
   <div class="panel-header">
     <span class="panel-title">최적화 결과</span>
@@ -258,12 +278,10 @@ const STAT_KEY_MAP = {
   'defend-critical-damage-value': 13,
 };
 const SKILL_NAMES = ['간파','강타','끈기','대응','맹격','불멸','약점 방어','흡수'];
-// skillW is now managed via skillWState
 
-// 토글 값: 0=무시, 1=보통(20), 2=중요(60), 3=핵심(120)
 const TOGGLE_VALS = [0, 20, 60, 120];
 const SKILL_TOGGLE_VALS = [0, 30, 70, 150];
-const wState = {}; // key -> 0~3
+const wState = {}; 
 const skillWState = {};
 
 function getW(i){ return TOGGLE_VALS[wState[i] || 0]; }
@@ -347,9 +365,9 @@ function toggle(key){
 }
 
 // ===== FILTER =====
-let activeGrades = new Set(); // 복수 등급 선택
-let activeCosts = new Set();  // 복수 점수 선택
-let specialFilter = 'all';    // 'all' | 'sel'
+let activeGrades = new Set(); 
+let activeCosts = new Set();  
+let specialFilter = 'all';    
 
 document.getElementById('filterRow').addEventListener('click', e => {
   const btn = e.target.closest('.filter-btn');
@@ -360,7 +378,6 @@ document.getElementById('filterRow').addEventListener('click', e => {
     if(activeGrades.has(g)) activeGrades.delete(g);
     else activeGrades.add(g);
     btn.classList.toggle('active');
-    // 전체/선택됨 해제
     document.querySelector('[data-f="all"]').classList.remove('active');
     document.querySelector('[data-f="sel"]').classList.remove('active');
     specialFilter = '';
@@ -373,7 +390,6 @@ document.getElementById('filterRow').addEventListener('click', e => {
     document.querySelector('[data-f="sel"]').classList.remove('active');
     specialFilter = '';
   } else {
-    // 전체 or 선택됨
     document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     activeGrades.clear(); activeCosts.clear();
@@ -391,7 +407,6 @@ function makeToggles(container, key, isSkill){
   container.innerHTML = TOGGLE_LABELS.map((lbl,i) =>
     `<button class="wt ${TOGGLE_CLS[i]}" data-key="${key}" data-lv="${i}" data-skill="${isSkill?'1':''}">${lbl}</button>`
   ).join('');
-  // 무시 기본 active
   container.querySelector('.wt').classList.add('on');
 }
 
@@ -408,7 +423,6 @@ function handleToggle(e){
   else wState[key] = lv;
 }
 
-// 스탯 토글 초기화
 document.querySelectorAll('.w-toggles').forEach(c => {
   makeToggles(c, c.dataset.key, false);
 });
@@ -428,15 +442,9 @@ document.addEventListener('click', handleToggle);
 })();
 
 // ===== OPTIMIZE =====
-// 목표: 완성 인연 중에서 exactCap 점수 딱 맞는 top-3 조합 탐색
-// exactCap: 20→19→18...순으로 조합 존재하는 최대 cap
 function findTop3(candidates, cap) {
   const n = candidates.length;
-  // DP: dp[w] = {score, items[]}
-  // 정확히 w점 조합만 저장 (top-3 유지)
-  // 메모리 효율을 위해 top-3만 유지
   const TOP = 3;
-  // dp[w] = array of {score, idxList} sorted by score desc (max TOP)
   const dp = Array.from({length: cap+1}, () => []);
   dp[0] = [{score:0, idxs:[]}];
 
@@ -444,14 +452,11 @@ function findTop3(candidates, cap) {
     const bond = candidates[i];
     const cost = bond.pointCost;
     const sc = calcScore(bond);
-    // 역방향 순회
     for(let w=cap;w>=cost;w--){
       const prev = dp[w-cost];
       if(!prev.length) continue;
       const newEntries = prev.map(e => ({score: e.score+sc, idxs:[...e.idxs, i]}));
-      // merge & keep top-3
       const merged = [...dp[w], ...newEntries];
-      // 중복 조합 제거 (같은 인연 집합)
       const seen = new Set();
       const deduped = [];
       for(const e of merged){
@@ -472,7 +477,6 @@ document.getElementById('optimizeBtn').addEventListener('click', () => {
     return;
   }
 
-  // 20점부터 내려가며 조합이 존재하는 cap 찾기
   let found = null, usedCap = 0;
   for(let cap=20; cap>=1; cap--){
     const r = findTop3(candidates, cap);
@@ -490,15 +494,17 @@ document.getElementById('optimizeBtn').addEventListener('click', () => {
     bonds: e.idxs.map(i => candidates[i]),
     points: usedCap
   }));
+  
   activeTab = 0;
   renderResult();
+  
+  if(window.innerWidth <= 1024) switchMobileTab(2);
 });
 
 function renderResult(){
   if(!results.length) return;
   const r = results[activeTab];
 
-  // stat totals
   const totals = {};
   r.bonds.forEach(b => {
     b.stats.forEach(s => {
@@ -537,7 +543,6 @@ function renderResult(){
       <span class="tab-pts">${res.points}점 · ${Math.round(res.score).toLocaleString()}점</span>
     </div>`).join('');
 
-  // 스킬 합산 (최고 레벨만)
   const skillMax = {};
   r.bonds.forEach(b => {
     b.skills.forEach(sk => {
@@ -559,8 +564,6 @@ function renderResult(){
 
 function switchTab(i){ activeTab = i; renderResult(); }
 
-
-// ===== SAVE / LOAD =====
 function saveSelection(){
   try{
     localStorage.setItem('bns_selected', JSON.stringify([...selected]));
@@ -597,6 +600,17 @@ function saveResult(){
   a.download = `도화첩_최적화_${r.points}점.txt`;
   a.click();
 }
+
+function switchMobileTab(idx) {
+  document.querySelectorAll('.m-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.panel').forEach((panel, i) => {
+    panel.classList.toggle('m-active', i === idx);
+  });
+  window.scrollTo(0, 0);
+}
+
 // ===== INIT =====
 renderList();
 </script></body></html>
