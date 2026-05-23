@@ -17,7 +17,19 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bottom:1px solid var(--gold);padding:14px 24px;display:flex;align-items:center;gap:16px}
 .logo{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--gold2);letter-spacing:2px;text-shadow:0 0 20px rgba(200,153,58,.4)}
 .logo span{color:var(--text2);font-size:13px;font-weight:500;margin-left:8px;letter-spacing:1px}
-.layout-wrap{display:flex;justify-content:center;height:calc(100vh - 53px);overflow:hidden}.layout{display:grid;grid-template-columns:340px 260px 400px;height:100%;width:1000px}
+.layout-wrap {
+  /* display: flex; 와 justify-content: center; 제거 */
+  height: calc(100vh - 53px);
+  overflow: auto; /* hidden을 auto로 변경하여 스크롤 허용 */
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 340px 260px 400px;
+  height: 100%;
+  width: 1000px;
+  margin: 0 auto; /* flex 대신 margin으로 안전하게 가운데 정렬 */
+}
 .panel{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .panel-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:6px}
 .panel-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase}
@@ -106,6 +118,21 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
 .wt.t2.on{background:rgba(76,175,120,.15);border-color:#4caf78;color:#4caf78}
 .wt.t3.on{background:rgba(200,153,58,.15);border-color:var(--gold);color:var(--gold2)}
 .wt.t4.on{background:rgba(224,68,68,.18);border-color:#e05050;color:#ff8070}
+@media (max-width: 1024px) {
+  .layout-wrap {
+    height: auto;
+  }
+  .layout {
+    width: 100%;
+    grid-template-columns: 1fr; /* 1단 세로 배치 */
+    height: auto;
+  }
+  .panel {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    min-height: 500px; /* 각 패널의 최소 높이 보장 */
+  }
+}
 </style>
 </head>
 <body>
