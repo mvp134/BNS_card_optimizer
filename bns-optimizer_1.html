@@ -50,9 +50,8 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
 .tag-crit{color:#c84080;border-color:rgba(200,64,128,.4);background:rgba(200,64,128,.1)}
 .tag-hit{color:#5aa8e0;border-color:rgba(90,168,224,.4);background:rgba(90,168,224,.1)}
 .tag-hp{color:#58c87e;border-color:rgba(88,200,126,.4);background:rgba(88,200,126,.1)}
-.tag-skill{color:var(--accent);border-color:rgba(155,126,200,.4);background:rgba(155,126,200,.1)}
 .tag-other{color:var(--text3);border-color:var(--border);background:transparent}
-.tag-skill-dim{color:#6a7090;border-color:rgba(106,112,144,.35);background:rgba(106,112,144,.06)}
+.tag-skill, .tag-skill-dim {color: #5ce68d;border-color: rgba(92, 230, 141, 0.4);background: rgba(92, 230, 141, 0.12);}
 .check-icon{width:15px;height:15px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:2px}
 .bond-item.checked .check-icon{background:var(--gold);border-color:var(--gold);color:#000;font-size:9px}
 .count-badge{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text2)}
@@ -307,7 +306,7 @@ function statTagClass(key){
   if(key==='attack-critical-damage-percent'||key==='attack-critical-damage-value') return 'tag-crit-dmg';
   if(key==='attack-critical-value') return 'tag-crit';
   if(key==='attack-hit-value') return 'tag-hit';
-  if(key==='max-hp') return 'tag-hp';
+//  if(key==='max-hp') return 'tag-hp';
   return 'tag-other';
 }
 
