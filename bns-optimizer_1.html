@@ -181,7 +181,15 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
       <div class="w-item"><span class="w-item-name">치명피해방어</span><div class="w-toggles" data-key="13"></div></div>
     </div>
     <div class="w-group">
-      <div class="w-group-title">스킬 우선순위</div>
+      <div class="w-group-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>스킬 우선순위</span>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:var(--text2);letter-spacing:0">
+          <span id="dupLabel" style="color:#e07070">중복 패널티 ON</span>
+          <div onclick="toggleDup()" id="dupToggle" style="width:32px;height:16px;border-radius:8px;background:#c94040;border:1px solid rgba(201,64,64,.5);position:relative;cursor:pointer;transition:all .2s">
+            <div id="dupKnob" style="width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:1px;right:1px;transition:all .2s"></div>
+          </div>
+        </label>
+      </div>
       <div id="skillGrid"></div>
     </div>
     <div class="notice" style="margin-bottom:8px">무시=0 · 보통=20 · 중요=60 · 핵심=120<br>스킬은 핵심=보너스 +12,000점</div>
@@ -241,6 +249,28 @@ const STAT_KEY_MAP = {
 };
 const SKILL_NAMES = ['간파','강타','끈기','대응','맹격','불멸','약점 방어','흡수'];
 // skillW is now managed via skillWState
+
+// 스킬 중복 패널티 ON/OFF
+let dupPenalty = true;
+function toggleDup(){
+  dupPenalty = !dupPenalty;
+  const knob = document.getElementById('dupKnob');
+  const track = document.getElementById('dupToggle');
+  const label = document.getElementById('dupLabel');
+  if(dupPenalty){
+    track.style.background = '#c94040';
+    track.style.borderColor = 'rgba(201,64,64,.5)';
+    knob.style.right = '1px'; knob.style.left = 'auto';
+    label.style.color = '#e07070';
+    label.textContent = '중복 패널티 ON';
+  } else {
+    track.style.background = '#2a3040';
+    track.style.borderColor = 'var(--border)';
+    knob.style.left = '1px'; knob.style.right = 'auto';
+    label.style.color = 'var(--text3)';
+    label.textContent = '중복 패널티 OFF';
+  }
+}
 
 // 토글 값: 0=무시, 1=보통(20), 2=중요(60), 3=핵심(120)
 const TOGGLE_VALS = [0, 20, 60, 120];
@@ -303,10 +333,12 @@ function calcCombinationScore(idxs, candidates){
     linearScore += (totals[key] || 0) * (w / 10);
   });
 
-  // 스킬 보너스
-  const skillMax = {};
+  // 스킬 보너스 + 중복 패널티
+  const skillMax = {};   // 스킬명 → 최고 레벨
+  const skillCount = {}; // 스킬명 → 등장 횟수
   idxs.forEach(i => {
     candidates[i].skills.forEach(sk => {
+      skillCount[sk.name] = (skillCount[sk.name] || 0) + 1;
       if(!skillMax[sk.name] || sk.lv > skillMax[sk.name]) skillMax[sk.name] = sk.lv;
     });
   });
@@ -314,6 +346,14 @@ function calcCombinationScore(idxs, candidates){
   Object.keys(skillMax).forEach(name => {
     const sw = getSkillW(name);
     if(sw) skillScore += sw * 100;
+    // 중복 패널티: 같은 스킬이 2개 이상이면 초과분당 가중치의 50% 차감
+    if(dupPenalty){
+      const dups = (skillCount[name] || 1) - 1;
+      if(dups > 0){
+        const penalty = (getSkillW(name) || 20) * 50 * dups;
+        skillScore -= penalty;
+      }
+    }
   });
 
   return critRateScore + critDmgScore + linearScore + skillScore;
