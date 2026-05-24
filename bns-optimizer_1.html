@@ -279,7 +279,14 @@ const wState = {}; // key -> 0~3
 const skillWState = {};
 
 function getW(i){ return TOGGLE_VALS[wState[i] || 0]; }
-function getSkillW(name){ return SKILL_TOGGLE_VALS[skillWState[name] || 0]; }
+// 스킬: 레벨 × 우선순위 배율 (무시=0, 보통=1, 중요=2, 핵심=4)
+const SKILL_MULTIPLIER = [0, 1, 2, 4];
+function getSkillW(name, lv){
+  if(lv === undefined) return 0;
+  const state = skillWState[name] || 0;
+  if(state === 0) return 0;
+  return lv * SKILL_MULTIPLIER[state];
+}
 
 // NEO 감쇠 곡선
 function critRateCurve(x){ return 0.9749 * x / (x + 13540.5); }
@@ -344,8 +351,9 @@ function calcCombinationScore(idxs, candidates){
   });
   let skillScore = 0;
   Object.keys(skillMax).forEach(name => {
-    const sw = getSkillW(name);
-    if(sw) skillScore += sw * 10; // 스탯 점수 대비 보조 역할로 축소
+    const lv = skillMax[name];
+    const sw = getSkillW(name, lv);
+    if(sw) skillScore += sw * 10;
     // 중복 패널티: 가중치 설정한 스킬만, 초과분당 보너스의 50% 차감
     if(dupPenalty && sw > 0){
       const dups = (skillCount[name] || 1) - 1;
@@ -492,10 +500,12 @@ document.getElementById('searchBox').addEventListener('input', renderList);
 
 // ===== TOGGLE BUTTONS INIT =====
 const TOGGLE_LABELS = ['무시','보통','중요','핵심'];
+const SKILL_TOGGLE_LABELS = ['무시','보통','중요','핵심'];
 const TOGGLE_CLS = ['t1','t2','t3','t4'];
 
 function makeToggles(container, key, isSkill){
-  container.innerHTML = TOGGLE_LABELS.map((lbl,i) =>
+  const labels = isSkill ? SKILL_TOGGLE_LABELS : TOGGLE_LABELS;
+  container.innerHTML = labels.map((lbl,i) =>
     `<button class="wt ${TOGGLE_CLS[i]}" data-key="${key}" data-lv="${i}" data-skill="${isSkill?'1':''}">${lbl}</button>`
   ).join('');
   // 무시 기본 active
@@ -529,7 +539,7 @@ document.addEventListener('click', handleToggle);
       <span class="w-item-name" style="color:var(--accent)">${n}</span>
       <div class="w-toggles" data-key="${n}" data-skill="1"></div>
     </div>`).join('');
-  g.querySelectorAll('.w-toggles').forEach(c => {
+  g.querySelectorAll('.w-toggles[data-skill="1"]').forEach(c => {
     makeToggles(c, c.dataset.key, true);
   });
 })();
@@ -710,5 +720,14 @@ function saveResult(){
   a.click();
 }
 // ===== INIT =====
+// 페이지 로드 시 마지막 저장 자동 불러오기
+(function(){
+  try{
+    const data = localStorage.getItem('bns_selected');
+    if(data){
+      JSON.parse(data).forEach(k => selected.add(k));
+    }
+  }catch(e){}
+})();
 renderList();
 </script></body></html>
