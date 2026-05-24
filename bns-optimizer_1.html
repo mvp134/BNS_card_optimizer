@@ -388,7 +388,7 @@ function calcScoreByMode(bond, mode){
 
   if(mode!=='damage'){
     bond.skills.forEach(sk => {
-      const base=Math.min(sk.lv,11)*1+Math.max(0,sk.lv-11)*2;
+      const base=Math.min(sk.lv,11)*2+Math.max(0,sk.lv-11)*4;
       const mult=mode==='custom'?getSkillW(sk.name,sk.lv):1.0;
       linearScore+=base*mult;
     });
