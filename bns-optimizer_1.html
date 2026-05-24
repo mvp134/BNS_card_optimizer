@@ -359,9 +359,40 @@ function calcCombinationScore(idxs, candidates){
   return critRateScore + critDmgScore + linearScore + skillScore;
 }
 
-// 단일 인연 점수 (목록 표시용 - 기존 호환)
+// 단일 인연 점수 (DP용 - 스탯만 반영, 스킬 제외)
 function calcScore(bond){
-  return calcCombinationScore([0], [bond]);
+  const totals = {};
+  bond.stats.forEach(st => {
+    totals[st.key] = (totals[st.key] || 0) + (st.isPercent ? st.value / 10 : st.value);
+  });
+
+  const critVal  = totals['attack-critical-value'] || 0;
+  const critPct  = totals['attack-critical-base-percent'] || 0;
+  const cdmgVal  = totals['attack-critical-damage-value'] || 0;
+  const cdmgPct  = totals['attack-critical-damage-percent'] || 0;
+
+  const wCritPct = getW(0), wCritDmg = getW(1), wCrit = getW(3), wCdmg = getW(2);
+
+  const critRateScore = (critRateCurve(critVal) * 100 * (wCrit / 10))
+                      + (critPct * (wCritPct / 10));
+  const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * (wCdmg / 10))
+                      + (cdmgPct * (wCritDmg / 10));
+
+  const LINEAR_STAT_KEYS = [
+    'attack-hit-value','max-hp','attack-pierce-value',
+    'defend-dodge-value','defend-parry-value','defend-critical-value',
+    'hp-regen','heal-power-value','defend-power-creature-value','defend-critical-damage-value'
+  ];
+  const LINEAR_KEYS = [4,5,6,7,8,9,10,11,12,13];
+  let linearScore = 0;
+  LINEAR_STAT_KEYS.forEach((key, i) => {
+    const w = getW(LINEAR_KEYS[i]);
+    if(!w) return;
+    linearScore += (totals[key] || 0) * (w / 10);
+  });
+
+  return critRateScore + critDmgScore + linearScore;
+  // 스킬 보너스는 DP 이후 calcCombinationScore에서만 반영
 }
 
 // ===== TAG HELPERS =====
