@@ -356,7 +356,12 @@ function calcCombinationScore(idxs, candidates){
   Object.keys(skillMax).forEach(name => {
     const lv = skillMax[name];
     const sw = getSkillW(name, lv);
-    if(sw) skillScore += sw * 10;
+    if(sw){
+      // Lv1~11: 선형, Lv12+: 희귀 보너스 (초과분 2.5배)
+      const baseLv = Math.min(lv, 11);
+      const rareLv = Math.max(0, lv - 11);
+      skillScore += sw * (baseLv * 0.6 + rareLv * 1.5);
+    }
     // 중복 패널티: 가중치 설정한 스킬만, 초과분당 보너스의 50% 차감
     if(dupPenalty && sw > 0){
       const dups = (skillCount[name] || 1) - 1;
@@ -382,18 +387,18 @@ function calcScore(bond){
   const wCritPct = getW(0), wCritDmg = getW(1), wCrit = getW(3), wCdmg = getW(2);
 
   // 치명 계열: 기본 스케일 × 토글 배율 (무시=1x 포함)
-  const BASE_CRIT = 2.0; // 중요 스탯 기본 가중치
+  const BASE_CRIT = 3.0; // 치명 계열 기본 배율 x3
   const critRateScore = (critRateCurve(critVal) * 100 * BASE_CRIT * wCrit)
                       + (critPct * BASE_CRIT * wCritPct);
   const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * BASE_CRIT * wCdmg)
                       + (cdmgPct * BASE_CRIT * wCritDmg);
 
   // 데이터 기반 스케일 계수 (치명 평균 138.1 기준 정규화)
-  // 기본 배율 적용: 명중x1.5, 관통x1.0, 방어계열x0.5
+  // 기본 배율: 명중x2.0, 관통x1.0, 방어계열x0.5
   const STAT_SCALE = {
-    'attack-hit-value':              0.02896 * 1.5,  // 명중 x1.5
-    'attack-pierce-value':           0.01076 * 1.0,  // 관통 x1.0
-    'max-hp':                        0.000136 * 0.5, // 방어계열 x0.5
+    'attack-hit-value':              0.02896 * 2.0,
+    'attack-pierce-value':           0.01076 * 1.0,
+    'max-hp':                        0.000136 * 0.5,
     'defend-dodge-value':            0.02631 * 0.5,
     'defend-parry-value':            0.02629 * 0.5,
     'defend-critical-value':         0.02139 * 0.5,
