@@ -515,7 +515,7 @@ function findTop3(candidates, cap) {
   
   // 최종 결과는 상위 3개만 반환
   return dp[cap].slice(0, 3);
-
+}
 document.getElementById('optimizeBtn').addEventListener('click', () => {
   const candidates = BONDS.filter(b => selected.has(b.key));
   if(!candidates.length){
