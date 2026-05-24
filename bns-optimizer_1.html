@@ -326,7 +326,7 @@ function calcCombinationScore(idxs, candidates){
   // 기본 배율: 명중x2.0, 관통x1.0, 방어계열x0.5
   const STAT_SCALE_FIXED = {
     'attack-hit-value':             0.02896 * 2.0,
-    'attack-pierce-value':          0.01076 * 1.0,
+    'attack-pierce-value':          0.01076 * 0.7,
     'max-hp':                       0.000136 * 0.5,
     'defend-dodge-value':           0.02631 * 0.5,
     'defend-parry-value':           0.02629 * 0.5,
@@ -358,67 +358,51 @@ function calcCombinationScore(idxs, candidates){
     const rareLv = Math.max(0, lv - 11);
     const lvScore = baseLv * 0.6 + rareLv * 1.5;
     skillScore += lvScore;
-    // 중복 패널티: 고정값으로 처리 (토글 무관)
-    if(dupPenalty){
-      const dups = (skillCount[name] || 1) - 1;
-      if(dups > 0) skillScore -= lvScore * 0.5 * dups;
-    }
+    // 중복 패널티는 DP 탐색에서만 적용, 최종 점수엔 미반영
   });
 
   return critRateScore + critDmgScore + linearScore + skillScore;
 }
 
-// 단일 인연 점수 (DP용 - 스탯만 반영, 스킬 제외)
+// DP 탐색용 점수: 토글 배율 적용 (조합 우선순위 결정용)
+// 최종 점수는 calcCombinationScore에서 별도 계산
 function calcScore(bond){
   const totals = {};
   bond.stats.forEach(st => {
     totals[st.key] = (totals[st.key] || 0) + (st.isPercent ? st.value / 10 : st.value);
   });
 
-  const critVal  = totals['attack-critical-value'] || 0;
-  const critPct  = totals['attack-critical-base-percent'] || 0;
-  const cdmgVal  = totals['attack-critical-damage-value'] || 0;
-  const cdmgPct  = totals['attack-critical-damage-percent'] || 0;
+  const critVal = totals['attack-critical-value'] || 0;
+  const critPct = totals['attack-critical-base-percent'] || 0;
+  const cdmgVal = totals['attack-critical-damage-value'] || 0;
+  const cdmgPct = totals['attack-critical-damage-percent'] || 0;
 
-  const wCritPct = getW(0), wCritDmg = getW(1), wCrit = getW(3), wCdmg = getW(2);
-
-  // 치명 계열: 고정 점수 (토글 무관)
+  // 토글 배율 적용 (우선순위 결정용)
   const BASE_CRIT = 3.0;
-  const critRateScore = (critRateCurve(critVal) * 100 * BASE_CRIT)
-                      + (critPct * BASE_CRIT);
-  const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * BASE_CRIT)
-                      + (cdmgPct * BASE_CRIT);
+  const wCrit = getW(3), wCritPct = getW(0), wCdmg = getW(2), wCritDmg = getW(1);
+  const critRateScore = (critRateCurve(critVal) * 100 * BASE_CRIT * wCrit)
+                      + (critPct * BASE_CRIT * wCritPct);
+  const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * BASE_CRIT * wCdmg)
+                      + (cdmgPct * BASE_CRIT * wCritDmg);
 
-  // 데이터 기반 스케일 계수 (치명 평균 138.1 기준 정규화)
-  // 기본 배율: 명중x2.0, 관통x1.0, 방어계열x0.5
-  const STAT_SCALE = {
-    'attack-hit-value':              0.02896 * 2.0,
-    'attack-pierce-value':           0.01076 * 1.0,
-    'max-hp':                        0.000136 * 0.5,
-    'defend-dodge-value':            0.02631 * 0.5,
-    'defend-parry-value':            0.02629 * 0.5,
-    'defend-critical-value':         0.02139 * 0.5,
-    'hp-regen':                      0.01622 * 0.5,
-    'heal-power-value':              0.02475 * 0.5,
-    'defend-power-creature-value':   0.00813 * 0.5,
-    'defend-critical-damage-value':  0.01679 * 0.5,
+  const DP_SCALE = {
+    'attack-hit-value':             0.02896*2.0, 'attack-pierce-value':          0.01076*0.7,
+    'max-hp':                       0.000136*0.5,'defend-dodge-value':           0.02631*0.5,
+    'defend-parry-value':           0.02629*0.5, 'defend-critical-value':        0.02139*0.5,
+    'hp-regen':                     0.01622*0.5, 'heal-power-value':             0.02475*0.5,
+    'defend-power-creature-value':  0.00813*0.5, 'defend-critical-damage-value': 0.01679*0.5,
   };
-  const LINEAR_STAT_KEYS = [
-    'attack-hit-value','max-hp','attack-pierce-value',
-    'defend-dodge-value','defend-parry-value','defend-critical-value',
-    'hp-regen','heal-power-value','defend-power-creature-value','defend-critical-damage-value'
-  ];
-  const LINEAR_KEYS = [4,5,6,7,8,9,10,11,12,13];
+  const DP_KEYS = ['attack-hit-value','max-hp','attack-pierce-value','defend-dodge-value',
+    'defend-parry-value','defend-critical-value','hp-regen','heal-power-value',
+    'defend-power-creature-value','defend-critical-damage-value'];
+  const DP_W_IDX = [4,5,6,7,8,9,10,11,12,13];
   let linearScore = 0;
-  LINEAR_STAT_KEYS.forEach((key, i) => {
-    const w = getW(LINEAR_KEYS[i]);
-    if(!w) return;
-    // 고정 점수 (토글 무관)
-    linearScore += (totals[key] || 0) * (STAT_SCALE[key] || 0.01);
+  DP_KEYS.forEach((key, i) => {
+    const w = getW(DP_W_IDX[i]);
+    linearScore += (totals[key] || 0) * (DP_SCALE[key] || 0.01) * w;
   });
 
   return critRateScore + critDmgScore + linearScore;
-  // 스킬 보너스는 DP 이후 calcCombinationScore에서만 반영
 }
 
 // ===== TAG HELPERS =====
@@ -586,7 +570,27 @@ function findTop3(candidates, cap) {
     for(let w=cap;w>=cost;w--){
       const prev = dp[w-cost];
       if(!prev.length) continue;
-      const newEntries = prev.map(e => ({score: e.score+sc, idxs:[...e.idxs, i]}));
+      // 중복 패널티: dupPenalty ON이면 이미 선택된 조합에 같은 스킬이 있으면 감점
+      const newEntries = prev.map(e => {
+        let penaltyScore = sc;
+        if(dupPenalty){
+          const existSkills = {};
+          e.idxs.forEach(ei => {
+            candidates[ei].skills.forEach(sk => {
+              existSkills[sk.name] = (existSkills[sk.name] || 0) + 1;
+            });
+          });
+          candidates[i].skills.forEach(sk => {
+            if(existSkills[sk.name]){
+              const lv = sk.lv;
+              const baseLv = Math.min(lv, 11);
+              const rareLv = Math.max(0, lv - 11);
+              penaltyScore -= (baseLv * 0.6 + rareLv * 1.5) * 0.5;
+            }
+          });
+        }
+        return {score: e.score + penaltyScore, idxs:[...e.idxs, i]};
+      });
       // merge & keep top-3
       const merged = [...dp[w], ...newEntries];
       // 중복 조합 제거 (같은 인연 집합)
