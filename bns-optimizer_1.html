@@ -389,18 +389,18 @@ function calcScore(bond){
                       + (cdmgPct * BASE_CRIT * wCritDmg);
 
   // 데이터 기반 스케일 계수 (치명 평균 138.1 기준 정규화)
-  // 명중은 중요 스탯 x2 부스트, 나머지 기타 스탯 기본값
+  // 기본 배율 적용: 명중x1.5, 관통x1.0, 방어계열x0.5
   const STAT_SCALE = {
-    'attack-hit-value':              0.02896,
-    'max-hp':                        0.000136,
-    'attack-pierce-value':           0.01076,
-    'defend-dodge-value':            0.02631,
-    'defend-parry-value':            0.02629,
-    'defend-critical-value':         0.02139,
-    'hp-regen':                      0.01622,
-    'heal-power-value':              0.02475,
-    'defend-power-creature-value':   0.00813,
-    'defend-critical-damage-value':  0.01679,
+    'attack-hit-value':              0.02896 * 1.5,  // 명중 x1.5
+    'attack-pierce-value':           0.01076 * 1.0,  // 관통 x1.0
+    'max-hp':                        0.000136 * 0.5, // 방어계열 x0.5
+    'defend-dodge-value':            0.02631 * 0.5,
+    'defend-parry-value':            0.02629 * 0.5,
+    'defend-critical-value':         0.02139 * 0.5,
+    'hp-regen':                      0.01622 * 0.5,
+    'heal-power-value':              0.02475 * 0.5,
+    'defend-power-creature-value':   0.00813 * 0.5,
+    'defend-critical-damage-value':  0.01679 * 0.5,
   };
   const LINEAR_STAT_KEYS = [
     'attack-hit-value','max-hp','attack-pierce-value',
