@@ -326,15 +326,15 @@ function calcCombinationScore(idxs, candidates, mode='balance'){
   // 기본 배율: 명중x2.0, 관통x1.0, 방어계열x0.5
   const STAT_SCALE_FIXED = {
     'attack-hit-value':             0.02896 * 2.0,
-    'attack-pierce-value':          0.01076 * 0.7,
-    'max-hp':                       0.000136 * 0.5,
-    'defend-dodge-value':           0.02631 * 0.5,
-    'defend-parry-value':           0.02629 * 0.5,
-    'defend-critical-value':        0.02139 * 0.5,
-    'hp-regen':                     0.01622 * 0.5,
-    'heal-power-value':             0.02475 * 0.5,
-    'defend-power-creature-value':  0.00813 * 0.5,
-    'defend-critical-damage-value': 0.01679 * 0.5,
+    'attack-pierce-value':          0.01076 * 0.5,
+    'max-hp':                       0.000136 * 0.3,
+    'defend-dodge-value':           0.02631 * 0.3,
+    'defend-parry-value':           0.02629 * 0.3,
+    'defend-critical-value':        0.02139 * 0.3,
+    'hp-regen':                     0.01622 * 0.3,
+    'heal-power-value':             0.02475 * 0.3,
+    'defend-power-creature-value':  0.00813 * 0.3,
+    'defend-critical-damage-value': 0.01679 * 0.3,
   };
   let linearScore = 0;
   LINEAR_STAT_KEYS.forEach(key => {
