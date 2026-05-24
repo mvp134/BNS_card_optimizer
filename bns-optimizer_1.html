@@ -309,7 +309,7 @@ function calcCombinationScore(idxs, candidates) {
       // 이렇게 하면 인연 옵션 자체가 높은 조합이 점수에서 우위를 점하게 됩니다.
       let multiplier = (weight / 10);
       if (st.isPercent && (st.key.includes('critical'))) {
-          multiplier *= 5.0; // % 옵션은 보너스 가중치 적용
+          multiplier *= 10.0; // % 옵션은 보너스 가중치 적용
       }
       
       statScore += statVal * multiplier;
