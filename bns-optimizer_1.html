@@ -225,7 +225,7 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
       <div class="w-group-title">스킬 우선순위</div>
       <div id="skillGrid"></div>
     </div>
-    <div class="notice" style="margin-bottom:8px">무시=0 · 보통=20 · 중요=60 · 핵심=120<br>스킬은 핵심=보너스 +12,000점</div>
+    <div class="notice" style="margin-bottom:8px">무시=0 · 보통=10 · 중요=100 · 핵심=1000<br>스킬 레벨과 중요도에 따라 추가 보너스 부여</div>
     <button class="optimize-btn" id="optimizeBtn">⚡ 최적 조합 계산</button>
     <div style="margin-top:14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.8;">
       <div style="color:var(--gold);font-size:11px;letter-spacing:1px;margin-bottom:6px;font-weight:700;">📖 사용법</div>
@@ -279,8 +279,8 @@ const STAT_KEY_MAP = {
 };
 const SKILL_NAMES = ['간파','강타','끈기','대응','맹격','불멸','약점 방어','흡수'];
 
-const TOGGLE_VALS = [0, 20, 60, 120];
-const SKILL_TOGGLE_VALS = [0, 30, 70, 150];
+const TOGGLE_VALS = [0, 10, 100, 1000]; 
+const SKILL_TOGGLE_VALS = [0, 50, 500, 5000];
 const wState = {}; 
 const skillWState = {};
 
