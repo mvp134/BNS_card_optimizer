@@ -880,7 +880,7 @@ function saveResult(){
   r.bonds.forEach(b => {
     text += `■ ${b.name} (${b.pointCost}점)\n`;
     b.stats.forEach(s => {
-      const v = s.isPercent ? (s.value*0.01).toFixed(2)+'%' : s.value;
+      const v = s.isPercent ? (s.value/10).toFixed(2)+'%' : s.value;
       text += `  ${s.name} +${v} (${s.stage}단계)\n`;
     });
     b.skills.forEach(sk => text += `  [스킬] ${sk.description}\n`);
