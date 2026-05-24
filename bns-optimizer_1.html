@@ -300,7 +300,7 @@ function calcScore(bond){
     
     // 👇 치명 확률% 및 치명 피해율%에 압도적인 가중치(1만 배) 부여
     if(st.key === 'attack-critical-base-percent' || st.key === 'attack-critical-damage-percent'){
-        statScore *= 10000; 
+        statScore *= 100; 
     }
     
     s += statScore;
