@@ -383,6 +383,19 @@ function calcScore(bond){
   const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * (wCdmg / 10))
                       + (cdmgPct * (wCritDmg / 10));
 
+  // 데이터 기반 스케일 계수 (치명 평균 138.1 기준 정규화)
+  const STAT_SCALE = {
+    'attack-hit-value':              0.01448,
+    'max-hp':                        0.000136,
+    'attack-pierce-value':           0.01076,
+    'defend-dodge-value':            0.02631,
+    'defend-parry-value':            0.02629,
+    'defend-critical-value':         0.02139,
+    'hp-regen':                      0.01622,
+    'heal-power-value':              0.02475,
+    'defend-power-creature-value':   0.00813,
+    'defend-critical-damage-value':  0.01679,
+  };
   const LINEAR_STAT_KEYS = [
     'attack-hit-value','max-hp','attack-pierce-value',
     'defend-dodge-value','defend-parry-value','defend-critical-value',
@@ -393,9 +406,7 @@ function calcScore(bond){
   LINEAR_STAT_KEYS.forEach((key, i) => {
     const w = getW(LINEAR_KEYS[i]);
     if(!w) return;
-    // 치명/치명피해 외 스탯은 1/10 스케일, 생명력은 수치가 커서 추가 1/100
-    const scale = key === 'max-hp' ? 0.001 : 0.1;
-    linearScore += (totals[key] || 0) * (w / 10) * scale;
+    linearScore += (totals[key] || 0) * (STAT_SCALE[key] || 0.01) * (w / 10);
   });
 
   return critRateScore + critDmgScore + linearScore;
