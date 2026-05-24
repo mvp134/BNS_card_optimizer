@@ -609,12 +609,29 @@ function renderResult(){
 
 function switchTab(i){ activeTab = i; renderResult(); }
 
-function saveSelection(){
-  try{
-    localStorage.setItem('bns_selected', JSON.stringify([...selected]));
-    alert(`✅ ${selected.size}개 인연 저장 완료`);
-  }catch(e){ alert('저장 실패: ' + e.message); }
+function saveSelection() {
+  // 1. 선택된 인연이 0개이면 저장하지 않음
+  if (selected.size === 0) {
+    alert('❌ 저장할 인연이 없습니다. 인연을 먼저 선택해주세요.');
+    return;
+  }
+
+  // 2. 저장 확인 메시지 창 띄우기
+  const isConfirmed = confirm(`${selected.size}개의 인연을 저장하시겠습니까?\n(기존 저장 데이터는 덮어씌워집니다.)`);
+  
+  if (isConfirmed) {
+    try {
+      localStorage.setItem('bns_selected', JSON.stringify([...selected]));
+      alert(`✅ ${selected.size}개의 인연이 성공적으로 저장되었습니다!`);
+    } catch(e) {
+      alert('저장 실패: ' + e.message);
+    }
+  } else {
+    // '아니오'를 눌렀을 때
+    console.log('저장이 취소되었습니다.');
+  }
 }
+  
 function loadSelection(){
   try{
     const data = localStorage.getItem('bns_selected');
