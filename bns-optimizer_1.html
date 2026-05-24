@@ -632,16 +632,27 @@ function saveSelection() {
   }
 }
   
-function loadSelection(){
-  try{
+function loadSelection() {
+  try {
     const data = localStorage.getItem('bns_selected');
-    if(!data){ alert('저장된 데이터가 없습니다'); return; }
-    const keys = JSON.parse(data);
-    selected.clear();
-    keys.forEach(k => selected.add(k));
-    renderList();
-    alert(`✅ ${selected.size}개 인연 불러오기 완료`);
-  }catch(e){ alert('불러오기 실패: ' + e.message); }
+    if (!data) {
+      alert('❌ 저장된 데이터가 없습니다.');
+      return;
+    }
+
+    // 불러오기 확인 창
+    const isConfirmed = confirm('저장된 인연 데이터를 불러오시겠습니까?\n(현재 선택된 인연은 모두 초기화됩니다.)');
+    
+    if (isConfirmed) {
+      const keys = JSON.parse(data);
+      selected.clear();
+      keys.forEach(k => selected.add(k));
+      renderList();
+      alert(`✅ ${selected.size}개의 인연을 성공적으로 불러왔습니다!`);
+    }
+  } catch(e) {
+    alert('불러오기 실패: ' + e.message);
+  }
 }
 function saveResult(){
   if(!results.length){ alert('먼저 최적화를 실행하세요'); return; }
