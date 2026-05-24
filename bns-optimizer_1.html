@@ -603,7 +603,8 @@ function findBest(candidates, cap, mode) {
       if(!prev.length) continue;
       const newEntries = prev.map(e => {
         let penaltyScore = sc;
-        if(dupPenalty){
+        if(dupPenalty && mode !== 'damage'){
+          // 스킬 중복 패널티 (damage 모드는 스킬 무시라 패널티도 스킬 기반이 아님)
           const existSkills = {};
           e.idxs.forEach(ei => {
             candidates[ei].skills.forEach(sk => {
@@ -612,16 +613,22 @@ function findBest(candidates, cap, mode) {
           });
           candidates[i].skills.forEach(sk => {
             if(existSkills[sk.name]){
-              const lv = sk.lv;
-              const baseLv = Math.min(lv, 11);
-              const rareLv = Math.max(0, lv - 11);
+              const baseLv = Math.min(sk.lv, 11);
+              const rareLv = Math.max(0, sk.lv - 11);
               penaltyScore -= (baseLv * 1 + rareLv * 2) * 0.5;
             }
+          });
+        } else if(dupPenalty && mode === 'damage'){
+          // damage 모드: 스킬명 중복 시 고정 패널티
+          const existSkills = new Set();
+          e.idxs.forEach(ei => candidates[ei].skills.forEach(sk => existSkills.add(sk.name)));
+          candidates[i].skills.forEach(sk => {
+            if(existSkills.has(sk.name)) penaltyScore -= 1;
           });
         }
         return {score: e.score + penaltyScore, idxs:[...e.idxs, i]};
       });
-      // merge & keep top-3
+      // merge & keep top-1
       const merged = [...dp[w], ...newEntries];
       // 중복 조합 제거 (같은 인연 집합)
       const seen = new Set();
@@ -719,7 +726,7 @@ function renderResult(){
     const lbl = TAB_LABELS[res.mode] || {icon:'', name:res.mode, sub:''};
     return `<div class="result-tab${i===activeTab?' active':''}" onclick="switchTab(${i})">
       <span class="tab-rank">${lbl.icon} ${lbl.name}</span>
-      <span class="tab-pts">${res.points}점 사용</span>
+      <span class="tab-pts">${res.points}점</span>
     </div>`;
   }).join('');
 
@@ -734,7 +741,7 @@ function renderResult(){
     `<div class="stat-item" style="grid-column:span 2"><span class="stat-item-name" style="color:var(--accent)">${sk.name} Lv${sk.lv}</span><span class="stat-item-val" style="font-size:11px;color:var(--text2);font-family:'Noto Sans KR'">${sk.description.split(':')[1]?.trim()||''}</span></div>`
   ).join('');
 
-  document.getElementById('resultMeta').textContent = TAB_LABELS[r.mode]?.name || '';
+  document.getElementById('resultMeta').textContent = `${TAB_LABELS[r.mode]?.name || ''} · ${r.points}점`;
   document.getElementById('resultPanel').innerHTML = `
     <div class="result-tabs">${tabsHtml}</div>
     <div class="result-summary">
