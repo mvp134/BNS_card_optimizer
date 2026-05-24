@@ -388,7 +388,7 @@ function calcScoreByMode(bond, mode){
 
   if(mode!=='damage'){
     bond.skills.forEach(sk => {
-      const base=Math.min(sk.lv,11)*2+Math.max(0,sk.lv-11)*4;
+      const base=Math.min(sk.lv,11)*1+Math.max(0,sk.lv-11)*2;
       const mult=mode==='custom'?getSkillW(sk.name,sk.lv):1.0;
       linearScore+=base*mult;
     });
@@ -623,12 +623,28 @@ function renderResult(){
 
   const tabsHtml=results.map((res,i)=>{
     const lbl=TAB_LABELS[res.mode];
+    // 스탯점수 계산: (1+치명확률합) × (1+치명피해율합) × 100
+    const bondTotals={};
+    res.bonds.forEach(b=>b.stats.forEach(s=>{
+      bondTotals[s.key]=(bondTotals[s.key]||0)+(s.isPercent?s.value/10:s.value);
+    }));
+    const critRatePct = critRateCurve(bondTotals['attack-critical-value']||0)*100
+                      + (bondTotals['attack-critical-base-percent']||0);
+    const critDmgPct  = (critDmgCurve(bondTotals['attack-critical-damage-value']||0)-critDmgCurve(0))*100
+                      + (bondTotals['attack-critical-damage-percent']||0);
+    const statScore   = Math.round((1+critRatePct/100)*(1+critDmgPct/100)*100);
     return `<div class="result-tab${i===activeTab?' active':''}" onclick="switchTab(${i})">
       <span class="tab-rank">${lbl.icon} ${lbl.name}</span>
-      <span class="tab-pts">${res.points}점</span>
+      <span class="tab-pts">스탯점수 ${statScore}</span>
     </div>`;
   }).join('');
 
+  // 현재 탭 스탯점수 재계산
+  const _bt={};
+  r.bonds.forEach(b=>b.stats.forEach(s=>{_bt[s.key]=(_bt[s.key]||0)+(s.isPercent?s.value/10:s.value);}));
+  const _cr=critRateCurve(_bt['attack-critical-value']||0)*100+(_bt['attack-critical-base-percent']||0);
+  const _cd=(critDmgCurve(_bt['attack-critical-damage-value']||0)-critDmgCurve(0))*100+(_bt['attack-critical-damage-percent']||0);
+  const _ss=Math.round((1+_cr/100)*(1+_cd/100)*100);
   document.getElementById('resultMeta').textContent=`${TAB_LABELS[r.mode]?.name||''} · ${r.points}점`;
   document.getElementById('resultPanel').innerHTML=`
     <div class="result-tabs">${tabsHtml}</div>
