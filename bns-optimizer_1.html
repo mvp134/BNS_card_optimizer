@@ -295,7 +295,7 @@ function critRateCurve(x){ return 0.9749 * x / (x + 13540.5); }
 function critDmgCurve(x){ return 2.6661 * x / (x + 7201.28) + 1.1403; }
 
 // 조합 전체 스탯 합산 후 곡선 적용해서 점수 계산
-function calcCombinationScore(idxs, candidates){
+function calcCombinationScore(idxs, candidates, mode='balance'){
   // 스탯 합산
   const totals = {};
   idxs.forEach(i => {
@@ -353,7 +353,8 @@ function calcCombinationScore(idxs, candidates){
   let skillScore = 0;
   Object.keys(skillMax).forEach(name => {
     const lv = skillMax[name];
-    // Lv1~11: 선형 x0.6, Lv12+: 희귀 보너스 x1.5 (토글 무관 고정 점수)
+    // damage 모드는 스킬 무시
+    if(mode === 'damage') return;
     const baseLv = Math.min(lv, 11);
     const rareLv = Math.max(0, lv - 11);
     const lvScore = baseLv * 1 + rareLv * 2;
@@ -686,7 +687,7 @@ document.getElementById('optimizeBtn').addEventListener('click', () => {
         mode,
         bonds: e.idxs.map(i => candidates[i]),
         points: usedCap,
-        score: calcCombinationScore(e.idxs, candidates)
+        score: calcCombinationScore(e.idxs, candidates, mode)
       });
     }
   }
