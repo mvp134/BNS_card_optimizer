@@ -337,7 +337,7 @@ function calcCombinationScore(idxs, candidates){
   LINEAR_STAT_KEYS.forEach((key, i) => {
     const w = getW(LINEAR_KEYS[i]);
     if(!w) return;
-    linearScore += (totals[key] || 0) * (w / 10);
+    linearScore += (totals[key] || 0) * (w / 10) * 0.1;
   });
 
   // 스킬 보너스 + 중복 패널티
@@ -393,7 +393,9 @@ function calcScore(bond){
   LINEAR_STAT_KEYS.forEach((key, i) => {
     const w = getW(LINEAR_KEYS[i]);
     if(!w) return;
-    linearScore += (totals[key] || 0) * (w / 10);
+    // 치명/치명피해 외 스탯은 1/10 스케일, 생명력은 수치가 커서 추가 1/100
+    const scale = key === 'max-hp' ? 0.001 : 0.1;
+    linearScore += (totals[key] || 0) * (w / 10) * scale;
   });
 
   return critRateScore + critDmgScore + linearScore;
