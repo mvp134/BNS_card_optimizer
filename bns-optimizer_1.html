@@ -345,14 +345,11 @@ function calcCombinationScore(idxs, candidates){
   let skillScore = 0;
   Object.keys(skillMax).forEach(name => {
     const sw = getSkillW(name);
-    if(sw) skillScore += sw * 100;
-    // 중복 패널티: 같은 스킬이 2개 이상이면 초과분당 가중치의 50% 차감
-    if(dupPenalty){
+    if(sw) skillScore += sw * 10; // 스탯 점수 대비 보조 역할로 축소
+    // 중복 패널티: 가중치 설정한 스킬만, 초과분당 보너스의 50% 차감
+    if(dupPenalty && sw > 0){
       const dups = (skillCount[name] || 1) - 1;
-      if(dups > 0){
-        const penalty = (getSkillW(name) || 20) * 50 * dups;
-        skillScore -= penalty;
-      }
+      if(dups > 0) skillScore -= sw * 5 * dups;
     }
   });
 
