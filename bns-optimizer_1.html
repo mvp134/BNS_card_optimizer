@@ -308,7 +308,7 @@ function calcCombinationScore(idxs, candidates) {
       
       // 치명 / 치명피해율 최우선 적용 (1만배)
       if(st.key === 'attack-critical-base-percent' || st.key === 'attack-critical-damage-percent'){
-        statScore *= 10000;
+        statScore *= 100;
       }
       totalScore += statScore;
     });
