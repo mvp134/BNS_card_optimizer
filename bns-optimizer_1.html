@@ -294,12 +294,24 @@ function calcScore(bond){
     if(wi === undefined) return;
     const w = getW(wi);
     if(!w) return;
-    s += (st.isPercent ? st.value * 0.01 : st.value) * w;
+    
+    // 기본 점수 계산 (퍼센트 수치는 0.1을 곱해 실제 %값으로 변환)
+    let statScore = (st.isPercent ? st.value * 0.1 : st.value) * w;
+    
+    // 👇 치명 확률% 및 치명 피해율%에 압도적인 가중치(1만 배) 부여
+    if(st.key === 'attack-critical-base-percent' || st.key === 'attack-critical-damage-percent'){
+        statScore *= 10000; 
+    }
+    
+    s += statScore;
   });
+  
   bond.skills.forEach(sk => {
     const sw = getSkillW(sk.name);
-    if(sw) s += sw * 100;
+    // 스킬 점수도 비중을 높이고 싶다면 100 대신 더 큰 수치(예: 10000)를 곱하시면 됩니다.
+    if(sw) s += sw * 100; 
   });
+  
   return s;
 }
 
@@ -509,20 +521,20 @@ function renderResult(){
   r.bonds.forEach(b => {
     b.stats.forEach(s => {
       if(!totals[s.key]) totals[s.key] = {name:s.name, val:0, isPercent:s.isPercent};
-      totals[s.key].val += s.isPercent ? s.value*0.01 : s.value;
+      totals[s.key].val += s.isPercent ? s.value*0.1 : s.value;
     });
   });
   const KEY_ORDER = ['attack-critical-base-percent','attack-critical-damage-percent','attack-critical-damage-value','attack-critical-value','attack-hit-value','max-hp','attack-pierce-value','defend-dodge-value','defend-parry-value','defend-critical-value','hp-regen','heal-power-value','defend-power-creature-value','defend-critical-damage-value'];
   const statHtml = KEY_ORDER.filter(k=>totals[k]).map(k=>{
     const t = totals[k];
-    const disp = t.isPercent ? `${t.val.toFixed(2)}%` : Math.round(t.val).toLocaleString();
+    const disp = t.isPercent ? `${t.val.toFixed(1)}%` : Math.round(t.val).toLocaleString();
     const hi = k.includes('percent') ? ' hi' : '';
     return `<div class="stat-item"><span class="stat-item-name">${t.name}</span><span class="stat-item-val${hi}">${disp}</span></div>`;
   }).join('');
 
   const bondsHtml = r.bonds.map(b => {
     const effs = b.stats.map(s => {
-      const disp = s.isPercent ? `${(s.value*0.01).toFixed(2)}%` : s.value.toLocaleString();
+      const disp = s.isPercent ? `${(s.value*0.1).toFixed(1)}%` : s.value.toLocaleString();
       return `<div class="result-effect"><span class="result-effect-name">${s.name} (${s.stage}단계)</span><span class="result-effect-val">+${disp}</span></div>`;
     }).join('');
     const skills = b.skills.map(sk =>
@@ -588,7 +600,7 @@ function saveResult(){
   r.bonds.forEach(b => {
     text += `■ ${b.name} (${b.pointCost}점)\n`;
     b.stats.forEach(s => {
-      const v = s.isPercent ? (s.value*0.01).toFixed(2)+'%' : s.value;
+      const v = s.isPercent ? (s.value*0.1).toFixed(1)+'%' : s.value;
       text += `  ${s.name} +${v} (${s.stage}단계)\n`;
     });
     b.skills.forEach(sk => text += `  [스킬] ${sk.description}\n`);
