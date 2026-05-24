@@ -291,31 +291,36 @@ function getSkillW(name){ return SKILL_TOGGLE_VALS[skillWState[name] || 0]; }
 // 데미지 계산  
 function calcCombinationScore(idxs, candidates) {
   let statScore = 0;
-  let skillMultiplier = 1.0; 
+  let critBonus = 1.0; // % 옵션들이 만들어내는 최종 데미지 곱연산 배율 (기본 1.0)
+  let skillMultiplier = 1.0; // 스킬들이 만들어내는 최종 데미지 곱연산 배율 (기본 1.0)
   const skillMax = {}; 
 
   for (const idx of idxs) {
     const bond = candidates[idx];
     
-    // 1. 스탯 점수 합산
+    // 1. 스탯 계산
     bond.stats.forEach(st => {
       const wi = STAT_KEY_MAP[st.key];
       const weight = getW(wi);
       if (weight === 0) return;
 
       const statVal = (st.isPercent ? st.value * 0.1 : st.value);
-      
-      // 핵심 수정: 고정 % 옵션(치명%, 치피%)은 합산 시 가중치를 2배 더 높게 부여
-      // 이렇게 하면 인연 옵션 자체가 높은 조합이 점수에서 우위를 점하게 됩니다.
-      let multiplier = (weight / 10);
-      if (st.isPercent && (st.key.includes('critical'))) {
-          multiplier *= 10.0; // % 옵션은 보너스 가중치 적용
+      const boostedVal = statVal * (weight / 10); 
+
+      // 핵심: % 옵션이면서 치명타 관련인 경우
+      if (st.isPercent && st.key.includes('critical')) {
+          // 1) 점수에 더 큰 가중치 부여 (2배)
+          statScore += boostedVal * 2.0; 
+          // 2) 전체 데미지 배율(critBonus)을 상승시켜 '복리 효과' 반영
+          // 10% 증가면 배율에 0.05 추가 등 (수치는 게임 효율에 맞게 조정 가능)
+          critBonus += (statVal * 0.005); 
+      } else {
+          // 일반 스탯은 그대로 합산
+          statScore += boostedVal;
       }
-      
-      statScore += statVal * multiplier;
     });
     
-    // 2. 스킬 처리 (기존과 동일)
+    // 2. 스킬 레벨 추적
     bond.skills.forEach(sk => {
       if (!skillMax[sk.name] || sk.lv > skillMax[sk.name]) skillMax[sk.name] = sk.lv;
     });
@@ -329,7 +334,9 @@ function calcCombinationScore(idxs, candidates) {
     }
   }
 
-  return statScore * skillMultiplier;
+  // 4. 최종 결과 = (스탯 점수) * (치명타 곱연산 배율) * (스킬 곱연산 배율)
+  // 이렇게 하면 치명타 % 인연 하나가 전체 점수를 비약적으로 올리게 됩니다.
+  return statScore * critBonus * skillMultiplier;
 }
 
 // ===== TAG HELPERS =====
