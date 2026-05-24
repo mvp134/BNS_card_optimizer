@@ -339,10 +339,9 @@ function calcCombinationScore(idxs, candidates, mode='balance'){
   let linearScore = 0;
   LINEAR_STAT_KEYS.forEach(key => {
     if(mode === 'damage'){
-      // damage 모드: 명중만 절반, 나머지 제외
+      // damage 모드: 명중만 절반 반영, 나머지 완전 제외
       if(key === 'attack-hit-value')
         linearScore += (totals[key] || 0) * (STAT_SCALE_FIXED[key] || 0.01) * 0.5;
-      // 나머지 스탯 무시
       return;
     }
     linearScore += (totals[key] || 0) * (STAT_SCALE_FIXED[key] || 0.01);
@@ -419,11 +418,13 @@ function calcScoreByMode(bond, mode){
   let linearScore = 0;
   DP_KEYS.forEach((key, i) => {
     if(mode === 'damage'){
+      // damage 모드: 명중만 절반, 나머지 완전 제외
       if(key === 'attack-hit-value')
         linearScore += (totals[key] || 0) * (DP_SCALE[key] || 0.01) * 0.5;
-      return;
+      return; // 나머지 스탯 모두 제외
     }
     const w = getWByMode(DP_W_IDX[i], mode);
+    if(!w) return;
     linearScore += (totals[key] || 0) * (DP_SCALE[key] || 0.01) * w;
   });
 
