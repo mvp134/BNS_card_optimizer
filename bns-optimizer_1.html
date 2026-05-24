@@ -632,7 +632,7 @@ function renderResult(){
                       + (bondTotals['attack-critical-base-percent']||0);
     const critDmgPct  = (critDmgCurve(bondTotals['attack-critical-damage-value']||0)-critDmgCurve(0))*100
                       + (bondTotals['attack-critical-damage-percent']||0);
-    const statScore   = Math.round((1+critRatePct/100)*(1+critDmgPct/100)*100);
+    const statScore   = Math.round((1+critRatePct/100)*(1+critDmgPct/100)*10000);
     return `<div class="result-tab${i===activeTab?' active':''}" onclick="switchTab(${i})">
       <span class="tab-rank">${lbl.icon} ${lbl.name}</span>
       <span class="tab-pts">스탯점수 ${statScore}</span>
@@ -644,7 +644,7 @@ function renderResult(){
   r.bonds.forEach(b=>b.stats.forEach(s=>{_bt[s.key]=(_bt[s.key]||0)+(s.isPercent?s.value/10:s.value);}));
   const _cr=critRateCurve(_bt['attack-critical-value']||0)*100+(_bt['attack-critical-base-percent']||0);
   const _cd=(critDmgCurve(_bt['attack-critical-damage-value']||0)-critDmgCurve(0))*100+(_bt['attack-critical-damage-percent']||0);
-  const _ss=Math.round((1+_cr/100)*(1+_cd/100)*100);
+  const _ss=Math.round((1+_cr/100)*(1+_cd/100)*10000);
   document.getElementById('resultMeta').textContent=`${TAB_LABELS[r.mode]?.name||''} · ${r.points}점`;
   document.getElementById('resultPanel').innerHTML=`
     <div class="result-tabs">${tabsHtml}</div>
