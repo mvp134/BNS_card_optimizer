@@ -359,7 +359,7 @@ function calcCombinationScore(idxs, candidates){
     const baseLv = Math.min(lv, 11);
     const rareLv = Math.max(0, lv - 11);
     const lvScore = baseLv * 0.6 + rareLv * 1.5;
-    skillScore += lvScore * sw;
+    skillScore += lvScore; // 고정 점수 (토글 무관)
     // 중복 패널티: 가중치 설정한 스킬만, 초과분당 보너스의 50% 차감
     if(dupPenalty && sw > 0){
       const dups = (skillCount[name] || 1) - 1;
@@ -384,12 +384,12 @@ function calcScore(bond){
 
   const wCritPct = getW(0), wCritDmg = getW(1), wCrit = getW(3), wCdmg = getW(2);
 
-  // 치명 계열: 기본 스케일 × 토글 배율 (무시=1x 포함)
-  const BASE_CRIT = 3.0; // 치명 계열 기본 배율 x3
-  const critRateScore = (critRateCurve(critVal) * 100 * BASE_CRIT * wCrit)
-                      + (critPct * BASE_CRIT * wCritPct);
-  const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * BASE_CRIT * wCdmg)
-                      + (cdmgPct * BASE_CRIT * wCritDmg);
+  // 치명 계열: 고정 점수 (토글 무관)
+  const BASE_CRIT = 3.0;
+  const critRateScore = (critRateCurve(critVal) * 100 * BASE_CRIT)
+                      + (critPct * BASE_CRIT);
+  const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * BASE_CRIT)
+                      + (cdmgPct * BASE_CRIT);
 
   // 데이터 기반 스케일 계수 (치명 평균 138.1 기준 정규화)
   // 기본 배율: 명중x2.0, 관통x1.0, 방어계열x0.5
@@ -415,8 +415,8 @@ function calcScore(bond){
   LINEAR_STAT_KEYS.forEach((key, i) => {
     const w = getW(LINEAR_KEYS[i]);
     if(!w) return;
-    // w는 이제 배율(1~4), STAT_SCALE이 기본값
-    linearScore += (totals[key] || 0) * (STAT_SCALE[key] || 0.01) * w;
+    // 고정 점수 (토글 무관)
+    linearScore += (totals[key] || 0) * (STAT_SCALE[key] || 0.01);
   });
 
   return critRateScore + critDmgScore + linearScore;
