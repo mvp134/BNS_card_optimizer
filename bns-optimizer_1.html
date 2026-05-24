@@ -273,12 +273,15 @@ function toggleDup(){
 }
 
 // 토글 값: 0=무시, 1=보통(20), 2=중요(60), 3=핵심(120)
-const TOGGLE_VALS = [0, 20, 60, 120];
+// 토글 배율: 무시=1x, 보통=1.5x, 중요=2.5x, 핵심=4x
+const TOGGLE_MULTIPLIER = [1.0, 1.5, 2.5, 4.0];
 const SKILL_TOGGLE_VALS = [0, 30, 70, 150];
+// 하위 호환용 (사용 안 함)
+const TOGGLE_VALS = [10, 15, 25, 40];
 const wState = {}; // key -> 0~3
 const skillWState = {};
 
-function getW(i){ return TOGGLE_VALS[wState[i] || 0]; }
+function getW(i){ return TOGGLE_MULTIPLIER[wState[i] || 0]; }
 // 스킬: 레벨 × 우선순위 배율 (무시=0, 보통=1, 중요=2, 핵심=4)
 const SKILL_MULTIPLIER = [0, 1, 2, 4];
 function getSkillW(name, lv){
@@ -378,14 +381,17 @@ function calcScore(bond){
 
   const wCritPct = getW(0), wCritDmg = getW(1), wCrit = getW(3), wCdmg = getW(2);
 
-  const critRateScore = (critRateCurve(critVal) * 100 * (wCrit / 10))
-                      + (critPct * (wCritPct / 10));
-  const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * (wCdmg / 10))
-                      + (cdmgPct * (wCritDmg / 10));
+  // 치명 계열: 기본 스케일 × 토글 배율 (무시=1x 포함)
+  const BASE_CRIT = 2.0; // 중요 스탯 기본 가중치
+  const critRateScore = (critRateCurve(critVal) * 100 * BASE_CRIT * wCrit)
+                      + (critPct * BASE_CRIT * wCritPct);
+  const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * BASE_CRIT * wCdmg)
+                      + (cdmgPct * BASE_CRIT * wCritDmg);
 
   // 데이터 기반 스케일 계수 (치명 평균 138.1 기준 정규화)
+  // 명중은 중요 스탯 x2 부스트, 나머지 기타 스탯 기본값
   const STAT_SCALE = {
-    'attack-hit-value':              0.01448,
+    'attack-hit-value':              0.02896,
     'max-hp':                        0.000136,
     'attack-pierce-value':           0.01076,
     'defend-dodge-value':            0.02631,
@@ -406,7 +412,8 @@ function calcScore(bond){
   LINEAR_STAT_KEYS.forEach((key, i) => {
     const w = getW(LINEAR_KEYS[i]);
     if(!w) return;
-    linearScore += (totals[key] || 0) * (STAT_SCALE[key] || 0.01) * (w / 10);
+    // w는 이제 배율(1~4), STAT_SCALE이 기본값
+    linearScore += (totals[key] || 0) * (STAT_SCALE[key] || 0.01) * w;
   });
 
   return critRateScore + critDmgScore + linearScore;
