@@ -305,41 +305,40 @@ function calcCombinationScore(idxs, candidates){
     });
   });
 
-  // 치명 계열: 감쇠 곡선으로 실제 % 변환
-  const critVal   = totals['attack-critical-value'] || 0;
-  const critPct   = totals['attack-critical-base-percent'] || 0;
-  const cdmgVal   = totals['attack-critical-damage-value'] || 0;
-  const cdmgPct   = totals['attack-critical-damage-percent'] || 0;
+  // 치명 계열: 고정 점수 (토글 무관)
+  const critVal = totals['attack-critical-value'] || 0;
+  const critPct = totals['attack-critical-base-percent'] || 0;
+  const cdmgVal = totals['attack-critical-damage-value'] || 0;
+  const cdmgPct = totals['attack-critical-damage-percent'] || 0;
 
-  const wCritPct  = getW(0);
-  const wCritDmg  = getW(1);
-  const wCrit     = getW(3);
-  const wCdmg     = getW(2);
+  const BASE_CRIT = 3.0;
+  const critRateScore = (critRateCurve(critVal) * 100 * BASE_CRIT)
+                      + (critPct * BASE_CRIT);
+  const critDmgScore  = ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * BASE_CRIT)
+                      + (cdmgPct * BASE_CRIT);
 
-  // 치명확률: 수치→곡선, %는 직접 합산
-  const critRateScore = wCritPct > 0 || wCrit > 0
-    ? (critRateCurve(critVal) * 100 * (wCrit / 10)
-    +  critPct * (wCritPct / 10))
-    : 0;
-
-  // 치명피해율: 수치→곡선, %는 직접 합산
-  const critDmgScore = wCritDmg > 0 || wCdmg > 0
-    ? ((critDmgCurve(cdmgVal) - critDmgCurve(0)) * 100 * (wCdmg / 10)
-    +  cdmgPct * (wCritDmg / 10))
-    : 0;
-
-  // 나머지 스탯 선형 합산
-  const LINEAR_KEYS = [4,5,6,7,8,9,10,11,12,13];
+  // 나머지 스탯: 고정 스케일 (토글 무관)
   const LINEAR_STAT_KEYS = [
     'attack-hit-value','max-hp','attack-pierce-value',
     'defend-dodge-value','defend-parry-value','defend-critical-value',
     'hp-regen','heal-power-value','defend-power-creature-value','defend-critical-damage-value'
   ];
+  // 기본 배율: 명중x2.0, 관통x1.0, 방어계열x0.5
+  const STAT_SCALE_FIXED = {
+    'attack-hit-value':             0.02896 * 2.0,
+    'attack-pierce-value':          0.01076 * 1.0,
+    'max-hp':                       0.000136 * 0.5,
+    'defend-dodge-value':           0.02631 * 0.5,
+    'defend-parry-value':           0.02629 * 0.5,
+    'defend-critical-value':        0.02139 * 0.5,
+    'hp-regen':                     0.01622 * 0.5,
+    'heal-power-value':             0.02475 * 0.5,
+    'defend-power-creature-value':  0.00813 * 0.5,
+    'defend-critical-damage-value': 0.01679 * 0.5,
+  };
   let linearScore = 0;
-  LINEAR_STAT_KEYS.forEach((key, i) => {
-    const w = getW(LINEAR_KEYS[i]);
-    if(!w) return;
-    linearScore += (totals[key] || 0) * (w / 10) * 0.1;
+  LINEAR_STAT_KEYS.forEach(key => {
+    linearScore += (totals[key] || 0) * (STAT_SCALE_FIXED[key] || 0.01);
   });
 
   // 스킬 보너스 + 중복 패널티
