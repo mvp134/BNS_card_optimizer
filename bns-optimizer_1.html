@@ -297,19 +297,25 @@ function calcCombinationScore(idxs, candidates) {
   for (const idx of idxs) {
     const bond = candidates[idx];
     
-    // 1. 스탯 점수 합산 (가중치 적용)
+    // 1. 스탯 점수 합산
     bond.stats.forEach(st => {
       const wi = STAT_KEY_MAP[st.key];
       const weight = getW(wi);
       if (weight === 0) return;
 
-      // 스탯 수치를 정규화하여 반영
       const statVal = (st.isPercent ? st.value * 0.1 : st.value);
-      // 스탯 점수 = 수치 * 가중치
-      statScore += statVal * (weight / 10); 
+      
+      // 핵심 수정: 고정 % 옵션(치명%, 치피%)은 합산 시 가중치를 2배 더 높게 부여
+      // 이렇게 하면 인연 옵션 자체가 높은 조합이 점수에서 우위를 점하게 됩니다.
+      let multiplier = (weight / 10);
+      if (st.isPercent && (st.key.includes('critical'))) {
+          multiplier *= 2.0; // % 옵션은 보너스 가중치 적용
+      }
+      
+      statScore += statVal * multiplier;
     });
     
-    // 2. 스킬 최고 레벨 추적
+    // 2. 스킬 처리 (기존과 동일)
     bond.skills.forEach(sk => {
       if (!skillMax[sk.name] || sk.lv > skillMax[sk.name]) skillMax[sk.name] = sk.lv;
     });
@@ -317,15 +323,12 @@ function calcCombinationScore(idxs, candidates) {
 
   // 3. 스킬 배율 산출
   for (const [name, lv] of Object.entries(skillMax)) {
-    const sw = getSkillW(name); // 0, 10, 100, 1000
+    const sw = getSkillW(name);
     if (sw > 0) {
-      // 핵심 스킬일수록 최종 데미지를 더 크게 증폭 (배율 적용)
       skillMultiplier += (sw / 1000) * (lv * 0.1); 
     }
   }
 
-  // 4. 최종 결과 = (스탯 합산 점수) * (스킬 배율)
-  // 스탯 점수가 낮아도 스킬 배율이 높으면 상위권으로 올라갑니다.
   return statScore * skillMultiplier;
 }
 
