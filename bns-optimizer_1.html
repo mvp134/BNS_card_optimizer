@@ -905,4 +905,17 @@ function saveResult(){
   }catch(e){}
 })();
 renderList();
+// ===== CHANGELOG MODAL =====
+function openChangelog() {
+  document.getElementById('changelogModal').style.display = 'flex';
+}
+
+function closeChangelog() {
+  document.getElementById('changelogModal').style.display = 'none';
+}
+
+// 모달 바깥(어두운 배경) 클릭 시 닫히도록 설정
+document.getElementById('changelogModal').addEventListener('click', function(e) {
+  if (e.target === this) closeChangelog();
+});
 </script></body></html>
