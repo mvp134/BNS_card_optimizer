@@ -326,15 +326,15 @@ function calcCombinationScore(idxs, candidates, mode='balance'){
   // 기본 배율: 명중x2.0, 관통x1.0, 방어계열x0.5
   const STAT_SCALE_FIXED = {
     'attack-hit-value':             0.02896 * 2.0,
-    'attack-pierce-value':          0.01076 * 0.5,
-    'max-hp':                       0.000136 * 0.3,
-    'defend-dodge-value':           0.02631 * 0.3,
-    'defend-parry-value':           0.02629 * 0.3,
-    'defend-critical-value':        0.02139 * 0.3,
-    'hp-regen':                     0.01622 * 0.3,
-    'heal-power-value':             0.02475 * 0.3,
-    'defend-power-creature-value':  0.00813 * 0.3,
-    'defend-critical-damage-value': 0.01679 * 0.3,
+    'attack-pierce-value':          0.01076 * 0.7,
+    'max-hp':                       0.000136 * 0.5,
+    'defend-dodge-value':           0.02631 * 0.5,
+    'defend-parry-value':           0.02629 * 0.5,
+    'defend-critical-value':        0.02139 * 0.5,
+    'hp-regen':                     0.01622 * 0.5,
+    'heal-power-value':             0.02475 * 0.5,
+    'defend-power-creature-value':  0.00813 * 0.5,
+    'defend-critical-damage-value': 0.01679 * 0.5,
   };
   let linearScore = 0;
   LINEAR_STAT_KEYS.forEach(key => {
@@ -428,12 +428,15 @@ function calcScoreByMode(bond, mode){
     linearScore += (totals[key] || 0) * (DP_SCALE[key] || 0.01) * w;
   });
 
-  // 스킬: damage 모드는 무시, 나머지는 포함
+  // 스킬: damage 모드는 무시, 나머지는 토글 배율 적용
   if(mode !== 'damage'){
     bond.skills.forEach(sk => {
       const baseLv = Math.min(sk.lv, 11);
       const rareLv = Math.max(0, sk.lv - 11);
-      linearScore += baseLv * 1 + rareLv * 2;
+      const baseScore = baseLv * 1 + rareLv * 2;
+      // custom 모드: 스킬별 토글 배율 적용, balance: 기본 x1
+      const skillMult = mode === 'custom' ? getSkillW(sk.name, sk.lv) : 1.0;
+      linearScore += baseScore * skillMult;
     });
   }
 
