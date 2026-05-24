@@ -177,18 +177,17 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
 </style>
 </head>
 <body>
-<header>
+<body>
 <header>
   <div class="logo">도화첩 최적화 <span>BnS NEO</span></div>
   <div style="background:rgba(155,126,200,.15);border:1px solid rgba(155,126,200,.4);border-radius:4px;padding:3px 10px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1.5px;">α ALPHA</div>
   
-  <!-- 우측 버튼 영역 추가 -->
   <div style="margin-left:auto; display:flex; gap:6px;">
     <button class="header-btn" onclick="openChangelog()">📝 변경기록</button>
-    <!-- href 속성에 만드신 구글 폼 링크를 넣어주세요 -->
     <a href="https://forms.gle/본인의_구글폼_주소" target="_blank" class="header-btn">💡 수정의견 접수</a>
   </div>
 </header>
+
 <div id="changelogModal" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-header">
@@ -196,7 +195,6 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
       <button class="modal-close" onclick="closeChangelog()">✖</button>
     </div>
     <div class="modal-body">
-      <!-- 최신 업데이트 내역을 가장 위에 작성하세요 -->
       <div class="log-item">
         <div class="log-meta">
           <span class="log-version">v1.0.1</span>
