@@ -261,7 +261,8 @@ function calcCombinationScore(idxs, candidates){
   const totals = {};
   idxs.forEach(i => {
     candidates[i].stats.forEach(st => {
-      totals[st.key] = (totals[st.key] || 0) + (st.isPercent ? st.value * 0.01 : st.value);
+      // isPercent: value=150 → 1.50% 이므로 /100, 아니면 raw
+      totals[st.key] = (totals[st.key] || 0) + (st.isPercent ? st.value / 10 : st.value);
     });
   });
 
@@ -544,7 +545,7 @@ function renderResult(){
   r.bonds.forEach(b => {
     b.stats.forEach(s => {
       if(!totals[s.key]) totals[s.key] = {name:s.name, val:0, isPercent:s.isPercent};
-      totals[s.key].val += s.isPercent ? s.value*0.01 : s.value;
+      totals[s.key].val += s.isPercent ? s.value/10 : s.value;
     });
   });
   const KEY_ORDER = ['attack-critical-base-percent','attack-critical-damage-percent','attack-critical-damage-value','attack-critical-value','attack-hit-value','max-hp','attack-pierce-value','defend-dodge-value','defend-parry-value','defend-critical-value','hp-regen','heal-power-value','defend-power-creature-value','defend-critical-damage-value'];
@@ -557,7 +558,7 @@ function renderResult(){
 
   const bondsHtml = r.bonds.map(b => {
     const effs = b.stats.map(s => {
-      const disp = s.isPercent ? `${(s.value*0.01).toFixed(2)}%` : s.value.toLocaleString();
+      const disp = s.isPercent ? `${(s.value/10).toFixed(2)}%` : s.value.toLocaleString();
       return `<div class="result-effect"><span class="result-effect-name">${s.name} (${s.stage}단계)</span><span class="result-effect-val">+${disp}</span></div>`;
     }).join('');
     const skills = b.skills.map(sk =>
