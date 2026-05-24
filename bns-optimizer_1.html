@@ -177,12 +177,13 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
 </style>
 </head>
 <body>
-<body>
-<header>
-  <div class="logo">도화첩 최적화 <span>BnS NEO</span></div>
-  <div style="background:rgba(155,126,200,.15);border:1px solid rgba(155,126,200,.4);border-radius:4px;padding:3px 10px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1.5px;">α ALPHA</div>
+<header style="flex-direction: column; align-items: flex-start; gap: 10px;">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <div class="logo">도화첩 최적화 <span>BnS NEO</span></div>
+    <div style="background:rgba(155,126,200,.15);border:1px solid rgba(155,126,200,.4);border-radius:4px;padding:3px 10px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1.5px;">α ALPHA</div>
+  </div>
   
-  <div style="margin-left:auto; display:flex; gap:6px;">
+  <div style="display: flex; gap: 6px;">
     <button class="header-btn" onclick="openChangelog()">📝 변경기록</button>
     <a href="https://forms.gle/본인의_구글폼_주소" target="_blank" class="header-btn">💡 수정의견 접수</a>
   </div>
@@ -202,7 +203,7 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
         </div>
         <div class="log-desc">
           - 텍스트 파일 저장 시 퍼센트(%) 수치 표기 오류 수정<br>
-          - UI 헤더에 변경기록 및 의견 접수 버튼 추가
+          - UI 타이틀 하단에 변경기록 및 의견 접수 버튼 추가
         </div>
       </div>
       
