@@ -287,50 +287,48 @@ const skillWState = {};
 function getW(i){ return TOGGLE_VALS[wState[i] || 0]; }
 function getSkillW(name){ return SKILL_TOGGLE_VALS[skillWState[name] || 0]; }
 
-// ===== 전체 조합의 점수를 계산하는 새로운 함수 =====
 function calcCombinationScore(idxs, candidates) {
-  let totalScore = 0;
-  const skillMax = {}; // 스킬별 최고 레벨 추적용
+  let totalAtk = 0;
+  let totalCritRate = 0;
+  let totalCritDmg = 1.0; // 배율 기준점은 1.0(추가분)
+  let skillMultiplier = 1.0; 
+  const skillMax = {}; 
 
-  // 1. 조합에 포함된 모든 도화 순회
   for (const idx of idxs) {
     const bond = candidates[idx];
-
-    // 스탯 점수 합산 (중복 적용 가능)
+    
+    // 1. 도화의 스탯 합산 (가중치 적용)
     bond.stats.forEach(st => {
       const wi = STAT_KEY_MAP[st.key];
-      if(wi === undefined) return;
-      const w = getW(wi);
-      if(!w) return;
+      const weight = getW(wi);
+      if (weight === 0) return;
 
-      // 퍼센트 수치는 0.1 곱하기 적용
-      let statScore = (st.isPercent ? st.value * 0.1 : st.value) * w;
-      
-      // 치명 / 치명피해율 최우선 적용 (1만배)
-      if(st.key === 'attack-critical-base-percent' || st.key === 'attack-critical-damage-percent'){
-        statScore *= 100;
-      }
-      totalScore += statScore;
+      const statVal = (st.isPercent ? st.value * 0.1 : st.value);
+      const boostedVal = statVal * (weight / 100); 
+
+      if (st.key === 'attack-hit-value') totalAtk += boostedVal;
+      if (st.key === 'attack-critical-base-percent') totalCritRate += (boostedVal * 0.001);
+      if (st.key === 'attack-critical-damage-value') totalCritDmg += (boostedVal * 0.01);
     });
-
-    // 스킬 최고 레벨 갱신
+    
+    // 스킬 최고 레벨 추적
     bond.skills.forEach(sk => {
-      if (!skillMax[sk.name] || sk.lv > skillMax[sk.name]) {
-        skillMax[sk.name] = sk.lv; // 기존보다 레벨이 높을 때만 덮어쓰기
-      }
+      if (!skillMax[sk.name] || sk.lv > skillMax[sk.name]) skillMax[sk.name] = sk.lv;
     });
   }
 
-  // 2. 스킬 점수 합산 (최고 레벨 1개만 반영)
+  // 2. 스킬 배율 합산
   for (const [name, lv] of Object.entries(skillMax)) {
     const sw = getSkillW(name);
-    if (sw) {
-      // 가중치 * 스킬 레벨 * 100
-      totalScore += sw * lv * 100;
+    if (sw > 0) {
+      skillMultiplier += (sw / 5000) * lv; 
     }
   }
 
-  return totalScore;
+  // 3. 순수 조합 데미지 기댓값 계산
+  // [공격력] * [치명타 확률 * 치명타 피해 배율] * [스킬 배율]
+  // 기본 스탯 없이 도화들이 가진 능력치만으로 기댓값을 산출합니다.
+  return totalAtk * (totalCritRate * totalCritDmg) * skillMultiplier;
 }
 
 // ===== TAG HELPERS =====
