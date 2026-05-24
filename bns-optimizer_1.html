@@ -306,11 +306,14 @@ function calcScore(bond){
     s += statScore;
   });
   
-  bond.skills.forEach(sk => {
-    const sw = getSkillW(sk.name);
-    // 스킬 점수도 비중을 높이고 싶다면 100 대신 더 큰 수치(예: 10000)를 곱하시면 됩니다.
-    if(sw) s += sw * 100; 
-  });
+// 👇 스킬 레벨을 가중치에 곱해주도록 수정
+bond.skills.forEach(sk => {
+  const sw = getSkillW(sk.name);
+  if(sw) {
+    // 유저가 설정한 가중치(sw)에 해당 도화의 스킬 레벨(sk.lv)을 곱합니다.
+    s += sw * sk.lv * 100; 
+  }
+});
   
   return s;
 }
