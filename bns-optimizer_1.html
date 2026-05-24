@@ -287,48 +287,46 @@ const skillWState = {};
 function getW(i){ return TOGGLE_VALS[wState[i] || 0]; }
 function getSkillW(name){ return SKILL_TOGGLE_VALS[skillWState[name] || 0]; }
 
+
+// 데미지 계산  
 function calcCombinationScore(idxs, candidates) {
-  let totalAtk = 0;
-  let totalCritRate = 0;
-  let totalCritDmg = 1.0; // 배율 기준점은 1.0(추가분)
+  let statScore = 0;
   let skillMultiplier = 1.0; 
   const skillMax = {}; 
 
   for (const idx of idxs) {
     const bond = candidates[idx];
     
-    // 1. 도화의 스탯 합산 (가중치 적용)
+    // 1. 스탯 점수 합산 (가중치 적용)
     bond.stats.forEach(st => {
       const wi = STAT_KEY_MAP[st.key];
       const weight = getW(wi);
       if (weight === 0) return;
 
+      // 스탯 수치를 정규화하여 반영
       const statVal = (st.isPercent ? st.value * 0.1 : st.value);
-      const boostedVal = statVal * (weight / 100); 
-
-      if (st.key === 'attack-hit-value') totalAtk += boostedVal;
-      if (st.key === 'attack-critical-base-percent') totalCritRate += (boostedVal * 0.001);
-      if (st.key === 'attack-critical-damage-value') totalCritDmg += (boostedVal * 0.01);
+      // 스탯 점수 = 수치 * 가중치
+      statScore += statVal * (weight / 10); 
     });
     
-    // 스킬 최고 레벨 추적
+    // 2. 스킬 최고 레벨 추적
     bond.skills.forEach(sk => {
       if (!skillMax[sk.name] || sk.lv > skillMax[sk.name]) skillMax[sk.name] = sk.lv;
     });
   }
 
-  // 2. 스킬 배율 합산
+  // 3. 스킬 배율 산출
   for (const [name, lv] of Object.entries(skillMax)) {
-    const sw = getSkillW(name);
+    const sw = getSkillW(name); // 0, 10, 100, 1000
     if (sw > 0) {
-      skillMultiplier += (sw / 5000) * lv; 
+      // 핵심 스킬일수록 최종 데미지를 더 크게 증폭 (배율 적용)
+      skillMultiplier += (sw / 1000) * (lv * 0.1); 
     }
   }
 
-  // 3. 순수 조합 데미지 기댓값 계산
-  // [공격력] * [치명타 확률 * 치명타 피해 배율] * [스킬 배율]
-  // 기본 스탯 없이 도화들이 가진 능력치만으로 기댓값을 산출합니다.
-  return totalAtk * (totalCritRate * totalCritDmg) * skillMultiplier;
+  // 4. 최종 결과 = (스탯 합산 점수) * (스킬 배율)
+  // 스탯 점수가 낮아도 스킬 배율이 높으면 상위권으로 올라갑니다.
+  return statScore * skillMultiplier;
 }
 
 // ===== TAG HELPERS =====
