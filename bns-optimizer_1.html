@@ -282,13 +282,12 @@ const wState = {}; // key -> 0~3
 const skillWState = {};
 
 function getW(i){ return TOGGLE_MULTIPLIER[wState[i] || 0]; }
-// 스킬: 레벨 × 우선순위 배율 (무시=0, 보통=1, 중요=2, 핵심=4)
-const SKILL_MULTIPLIER = [0, 1, 2, 4];
+// 스킬 토글 배율: 무시=1x(기본), 보통=1.5x, 중요=2.5x, 핵심=4x
+const SKILL_MULTIPLIER = [1.0, 1.5, 2.5, 4.0];
 function getSkillW(name, lv){
   if(lv === undefined) return 0;
   const state = skillWState[name] || 0;
-  if(state === 0) return 0;
-  return lv * SKILL_MULTIPLIER[state];
+  return SKILL_MULTIPLIER[state]; // 무시도 1.0 기본 반환
 }
 
 // NEO 감쇠 곡선
@@ -355,13 +354,12 @@ function calcCombinationScore(idxs, candidates){
   let skillScore = 0;
   Object.keys(skillMax).forEach(name => {
     const lv = skillMax[name];
-    const sw = getSkillW(name, lv);
-    if(sw){
-      // Lv1~11: 선형, Lv12+: 희귀 보너스 (초과분 2.5배)
-      const baseLv = Math.min(lv, 11);
-      const rareLv = Math.max(0, lv - 11);
-      skillScore += sw * (baseLv * 0.6 + rareLv * 1.5);
-    }
+    const sw = getSkillW(name, lv); // 항상 배율 반환 (무시=1.0)
+    // Lv1~11: 선형 x0.6, Lv12+: 희귀 보너스 x1.5
+    const baseLv = Math.min(lv, 11);
+    const rareLv = Math.max(0, lv - 11);
+    const lvScore = baseLv * 0.6 + rareLv * 1.5;
+    skillScore += lvScore * sw;
     // 중복 패널티: 가중치 설정한 스킬만, 초과분당 보너스의 50% 차감
     if(dupPenalty && sw > 0){
       const dups = (skillCount[name] || 1) - 1;
@@ -397,7 +395,7 @@ function calcScore(bond){
   // 기본 배율: 명중x2.0, 관통x1.0, 방어계열x0.5
   const STAT_SCALE = {
     'attack-hit-value':              0.02896 * 2.0,
-    'attack-pierce-value':           0.01076 * 0.7,
+    'attack-pierce-value':           0.01076 * 1.0,
     'max-hp':                        0.000136 * 0.5,
     'defend-dodge-value':            0.02631 * 0.5,
     'defend-parry-value':            0.02629 * 0.5,
