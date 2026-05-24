@@ -353,16 +353,15 @@ function calcCombinationScore(idxs, candidates){
   let skillScore = 0;
   Object.keys(skillMax).forEach(name => {
     const lv = skillMax[name];
-    const sw = getSkillW(name, lv); // 항상 배율 반환 (무시=1.0)
-    // Lv1~11: 선형 x0.6, Lv12+: 희귀 보너스 x1.5
+    // Lv1~11: 선형 x0.6, Lv12+: 희귀 보너스 x1.5 (토글 무관 고정 점수)
     const baseLv = Math.min(lv, 11);
     const rareLv = Math.max(0, lv - 11);
     const lvScore = baseLv * 0.6 + rareLv * 1.5;
-    skillScore += lvScore; // 고정 점수 (토글 무관)
-    // 중복 패널티: 가중치 설정한 스킬만, 초과분당 보너스의 50% 차감
-    if(dupPenalty && sw > 0){
+    skillScore += lvScore;
+    // 중복 패널티: 고정값으로 처리 (토글 무관)
+    if(dupPenalty){
       const dups = (skillCount[name] || 1) - 1;
-      if(dups > 0) skillScore -= sw * 5 * dups;
+      if(dups > 0) skillScore -= lvScore * 0.5 * dups;
     }
   });
 
