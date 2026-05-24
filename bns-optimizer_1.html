@@ -115,13 +115,112 @@ header{background:linear-gradient(180deg,#12060a 0%,var(--bg2) 100%);border-bott
 .wt.t2.on{background:rgba(76,175,120,.15);border-color:#4caf78;color:#4caf78}
 .wt.t3.on{background:rgba(200,153,58,.15);border-color:var(--gold);color:var(--gold2)}
 .wt.t4.on{background:rgba(224,68,68,.18);border-color:#e05050;color:#ff8070}
+/* 헤더 버튼 스타일 */
+.header-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text2);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.header-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold2);
+  background: rgba(200,153,58,0.1);
+}
+
+/* 모달 (팝업) 스타일 */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: none; align-items: center; justify-content: center;
+  z-index: 9999; backdrop-filter: blur(2px);
+}
+.modal-content {
+  background: var(--bg2);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 400px; max-width: 90%;
+  box-shadow: 0 0 30px rgba(0,0,0,0.8);
+  display: flex; flex-direction: column;
+}
+.modal-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h3 {
+  font-size: 14px; color: var(--gold2); margin: 0; letter-spacing: 1px;
+}
+.modal-close {
+  background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; transition: color 0.2s;
+}
+.modal-close:hover { color: var(--red); }
+.modal-body {
+  padding: 16px; max-height: 400px; overflow-y: auto;
+}
+.log-item {
+  margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--border);
+}
+.log-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.log-meta { font-size: 10px; color: var(--text3); margin-bottom: 4px; display: flex; gap: 8px; }
+.log-version { color: var(--accent); font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 12px; }
+.log-desc { font-size: 12px; color: var(--text); line-height: 1.5; }
 </style>
 </head>
 <body>
 <header>
+<header>
   <div class="logo">도화첩 최적화 <span>BnS NEO</span></div>
   <div style="background:rgba(155,126,200,.15);border:1px solid rgba(155,126,200,.4);border-radius:4px;padding:3px 10px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1.5px;">α ALPHA</div>
+  
+  <!-- 우측 버튼 영역 추가 -->
+  <div style="margin-left:auto; display:flex; gap:6px;">
+    <button class="header-btn" onclick="openChangelog()">📝 변경기록</button>
+    <!-- href 속성에 만드신 구글 폼 링크를 넣어주세요 -->
+    <a href="https://forms.gle/본인의_구글폼_주소" target="_blank" class="header-btn">💡 수정의견 접수</a>
+  </div>
 </header>
+<div id="changelogModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>UPDATE LOG</h3>
+      <button class="modal-close" onclick="closeChangelog()">✖</button>
+    </div>
+    <div class="modal-body">
+      <!-- 최신 업데이트 내역을 가장 위에 작성하세요 -->
+      <div class="log-item">
+        <div class="log-meta">
+          <span class="log-version">v1.0.1</span>
+          <span>2026.05.24</span>
+        </div>
+        <div class="log-desc">
+          - 텍스트 파일 저장 시 퍼센트(%) 수치 표기 오류 수정<br>
+          - UI 헤더에 변경기록 및 의견 접수 버튼 추가
+        </div>
+      </div>
+      
+      <div class="log-item">
+        <div class="log-meta">
+          <span class="log-version">v1.0.0</span>
+          <span>2026.05.20</span>
+        </div>
+        <div class="log-desc">
+          - 도화첩 최적화 알파 버전 배포<br>
+          - 조합 탐색 로직(DP) 적용 및 NEO 스탯 점감 곡선 반영
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="layout-wrap"><div class="layout">
 
 <!-- LEFT -->
