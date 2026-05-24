@@ -287,35 +287,50 @@ const skillWState = {};
 function getW(i){ return TOGGLE_VALS[wState[i] || 0]; }
 function getSkillW(name){ return SKILL_TOGGLE_VALS[skillWState[name] || 0]; }
 
-function calcScore(bond){
-  let s = 0;
-  bond.stats.forEach(st => {
-    const wi = STAT_KEY_MAP[st.key];
-    if(wi === undefined) return;
-    const w = getW(wi);
-    if(!w) return;
-    
-    // 기본 점수 계산 (퍼센트 수치는 0.1을 곱해 실제 %값으로 변환)
-    let statScore = (st.isPercent ? st.value * 0.1 : st.value) * w;
-    
-    // 👇 치명 확률% 및 치명 피해율%에 압도적인 가중치(1만 배) 부여
-    if(st.key === 'attack-critical-base-percent' || st.key === 'attack-critical-damage-percent'){
-        statScore *= 100; 
-    }
-    
-    s += statScore;
-  });
-  
-// 👇 스킬 레벨을 가중치에 곱해주도록 수정
-bond.skills.forEach(sk => {
-  const sw = getSkillW(sk.name);
-  if(sw) {
-    // 유저가 설정한 가중치(sw)에 해당 도화의 스킬 레벨(sk.lv)을 곱합니다.
-    s += sw * sk.lv * 100; 
+// ===== 전체 조합의 점수를 계산하는 새로운 함수 =====
+function calcCombinationScore(idxs, candidates) {
+  let totalScore = 0;
+  const skillMax = {}; // 스킬별 최고 레벨 추적용
+
+  // 1. 조합에 포함된 모든 도화 순회
+  for (const idx of idxs) {
+    const bond = candidates[idx];
+
+    // 스탯 점수 합산 (중복 적용 가능)
+    bond.stats.forEach(st => {
+      const wi = STAT_KEY_MAP[st.key];
+      if(wi === undefined) return;
+      const w = getW(wi);
+      if(!w) return;
+
+      // 퍼센트 수치는 0.1 곱하기 적용
+      let statScore = (st.isPercent ? st.value * 0.1 : st.value) * w;
+      
+      // 치명 / 치명피해율 최우선 적용 (1만배)
+      if(st.key === 'attack-critical-base-percent' || st.key === 'attack-critical-damage-percent'){
+        statScore *= 10000;
+      }
+      totalScore += statScore;
+    });
+
+    // 스킬 최고 레벨 갱신
+    bond.skills.forEach(sk => {
+      if (!skillMax[sk.name] || sk.lv > skillMax[sk.name]) {
+        skillMax[sk.name] = sk.lv; // 기존보다 레벨이 높을 때만 덮어쓰기
+      }
+    });
   }
-});
-  
-  return s;
+
+  // 2. 스킬 점수 합산 (최고 레벨 1개만 반영)
+  for (const [name, lv] of Object.entries(skillMax)) {
+    const sw = getSkillW(name);
+    if (sw) {
+      // 가중치 * 스킬 레벨 * 100
+      totalScore += sw * lv * 100;
+    }
+  }
+
+  return totalScore;
 }
 
 // ===== TAG HELPERS =====
@@ -456,34 +471,50 @@ document.addEventListener('click', handleToggle);
   });
 })();
 
-// ===== OPTIMIZE =====
+// ===== 최적화 알고리즘 (비선형 스킬 중복 고려) =====
 function findTop3(candidates, cap) {
   const n = candidates.length;
-  const TOP = 3;
+  // 스킬 중복으로 인한 점수 역전 현상을 막기 위해 
+  // 내부적으로는 상위 10개 조합까지 넉넉하게 추적합니다.
+  const DP_TOP = 10; 
   const dp = Array.from({length: cap+1}, () => []);
   dp[0] = [{score:0, idxs:[]}];
 
   for(let i=0;i<n;i++){
     const bond = candidates[i];
     const cost = bond.pointCost;
-    const sc = calcScore(bond);
+
     for(let w=cap;w>=cost;w--){
       const prev = dp[w-cost];
       if(!prev.length) continue;
-      const newEntries = prev.map(e => ({score: e.score+sc, idxs:[...e.idxs, i]}));
+
+      // 기존 조합들에 현재 도화(i)를 추가한 새 조합 구성
+      const newEntries = prev.map(e => {
+        const newIdxs = [...e.idxs, i];
+        return {
+          score: calcCombinationScore(newIdxs, candidates), // 전체 조합 점수 재계산
+          idxs: newIdxs
+        };
+      });
+
       const merged = [...dp[w], ...newEntries];
       const seen = new Set();
       const deduped = [];
+      
+      // 중복 조합 제거
       for(const e of merged){
         const key = [...e.idxs].sort((a,b)=>a-b).join(',');
         if(!seen.has(key)){ seen.add(key); deduped.push(e); }
       }
+      
+      // 점수 내림차순 정렬 후 상위 DP_TOP개만 유지
       deduped.sort((a,b)=>b.score-a.score);
-      dp[w] = deduped.slice(0, TOP);
+      dp[w] = deduped.slice(0, DP_TOP);
     }
   }
-  return dp[cap];
-}
+  
+  // 최종 결과는 상위 3개만 반환
+  return dp[cap].slice(0, 3);
 
 document.getElementById('optimizeBtn').addEventListener('click', () => {
   const candidates = BONDS.filter(b => selected.has(b.key));
